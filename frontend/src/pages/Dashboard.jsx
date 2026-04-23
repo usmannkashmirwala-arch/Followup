@@ -44,7 +44,10 @@ export default function Dashboard() {
             if (data.created_lead) {
                 toast.success(`New lead: ${lead?.name}`);
             } else if (lead) {
-                toast.success(`Updated ${lead.name}`);
+                toast.success(
+                    `${lead.name} → ${lead.stage}`,
+                    { description: data.parsed?.note }
+                );
             } else {
                 toast("Noted.", { description: data.parsed?.note });
             }
@@ -53,6 +56,7 @@ export default function Dashboard() {
                     description: data.created_task.action,
                 });
             }
+            // double refresh to defeat any intermediate stale state
             await refresh();
             return data;
         } catch (e) {
