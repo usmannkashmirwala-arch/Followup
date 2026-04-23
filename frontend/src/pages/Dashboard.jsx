@@ -1,27 +1,33 @@
-import { useEffect, useState, useCallback } from "react";
-import { api, STAGES } from "../lib/api";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { api, STAGES, fmtRelative, isOverdue } from "../lib/api";
+import { buildSuggestions } from "../lib/suggestions";
 import { toast } from "sonner";
 import MetricsBar from "../components/MetricsBar";
 import OverdueList from "../components/OverdueList";
 import KanbanBoard from "../components/KanbanBoard";
 import ChatInput from "../components/ChatInput";
 import LeadDetailSheet from "../components/LeadDetailSheet";
+import LeadsListDialog from "../components/LeadsListDialog";
 
 export default function Dashboard() {
     const [leads, setLeads] = useState([]);
     const [stats, setStats] = useState(null);
     const [overdue, setOverdue] = useState([]);
+    const [pendingTasks, setPendingTasks] = useState([]);
     const [activeLeadId, setActiveLeadId] = useState(null);
+    const [listKey, setListKey] = useState(null); // "active" | "pending" | "overdue" | "won"
 
     const refresh = useCallback(async () => {
-        const [l, s, o] = await Promise.all([
+        const [l, s, o, p] = await Promise.all([
             api.get("/leads"),
             api.get("/stats"),
             api.get("/tasks/overdue"),
+            api.get("/tasks?status=pending"),
         ]);
         setLeads(l.data);
         setStats(s.data);
         setOverdue(o.data);
+        setPendingTasks(p.data);
     }, []);
 
     useEffect(() => {
@@ -60,6 +66,103 @@ export default function Dashboard() {
         await api.patch(`/leads/${leadId}`, { stage });
         await refresh();
     };
+
+    const suggestions = useMemo(() => buildSuggestions(leads, 4), [leads]);
+
+    // Build list dialog content based on selected metric
+    const leadsById = useMemo(() => {
+        const map = new Map();
+        leads.forEach((l) => map.set(l.id, l));
+        return map;
+    }, [leads]);
+
+    const listConfig = useMemo(() => {
+        if (!listKey) return null;
+        if (listKey === "active") {
+            const items = leads
+                .filter(
+                    (l) => l.stage !== "ClosedWon" && l.stage !== "ClosedLost"
+                )
+                .map((l) => ({
+                    key: l.id,
+                    leadId: l.id,
+                    name: l.name,
+                    company: l.company,
+                    secondary: l.notes || null,
+                    stage: l.stage,
+                    when: `updated ${fmtRelative(l.updated_at)}`,
+                }));
+            return {
+                title: "Active leads",
+                subtitle: `${items.length} in the pipeline`,
+                items,
+                variant: "default",
+                emptyText: "No active leads.",
+            };
+        }
+        if (listKey === "won") {
+            const items = leads
+                .filter((l) => l.stage === "ClosedWon")
+                .map((l) => ({
+                    key: l.id,
+                    leadId: l.id,
+                    name: l.name,
+                    company: l.company,
+                    stage: "Won",
+                    when: `closed ${fmtRelative(l.updated_at)}`,
+                }));
+            return {
+                title: "Closed won",
+                subtitle: `${items.length} deal${items.length === 1 ? "" : "s"} landed`,
+                items,
+                variant: "success",
+                emptyText: "No wins yet — keep pushing.",
+            };
+        }
+        if (listKey === "pending") {
+            const items = pendingTasks.map((t) => {
+                const lead = leadsById.get(t.lead_id);
+                const od = isOverdue(t.due_date);
+                return {
+                    key: t.id,
+                    leadId: t.lead_id,
+                    name: lead?.name || "Unknown",
+                    company: lead?.company,
+                    secondary: t.action,
+                    stage: lead?.stage,
+                    when: fmtRelative(t.due_date),
+                    overdue: od,
+                };
+            });
+            return {
+                title: "Pending follow-ups",
+                subtitle: `${items.length} reminder${items.length === 1 ? "" : "s"} queued`,
+                items,
+                variant: "default",
+                emptyText: "Nothing queued.",
+            };
+        }
+        if (listKey === "overdue") {
+            const items = overdue.map((t) => ({
+                key: t.id,
+                leadId: t.lead_id,
+                name: t.lead?.name || "Unknown",
+                company: t.lead?.company,
+                secondary: t.action,
+                stage: t.lead?.stage,
+                when: fmtRelative(t.due_date),
+                overdue: true,
+            }));
+            return {
+                title: "Overdue — act now",
+                subtitle: `${items.length} need${items.length === 1 ? "s" : ""} your attention`,
+                items,
+                variant: "danger",
+                emptyText: "You're all caught up.",
+            };
+        }
+        return null;
+    }, [listKey, leads, pendingTasks, overdue, leadsById]);
 
     return (
         <div
@@ -109,7 +212,7 @@ export default function Dashboard() {
                         </p>
                     </div>
                     <div className="lg:col-span-4">
-                        <MetricsBar stats={stats} />
+                        <MetricsBar stats={stats} onSelect={(k) => setListKey(k)} />
                     </div>
                 </section>
 
@@ -148,7 +251,7 @@ export default function Dashboard() {
             </main>
 
             {/* Sticky AI input */}
-            <ChatInput onSubmit={handleChatSubmit} />
+            <ChatInput onSubmit={handleChatSubmit} suggestions={suggestions} />
 
             <LeadDetailSheet
                 leadId={activeLeadId}
@@ -156,6 +259,19 @@ export default function Dashboard() {
                 onOpenChange={(v) => !v && setActiveLeadId(null)}
                 onChanged={refresh}
             />
+
+            {listConfig && (
+                <LeadsListDialog
+                    open={!!listKey}
+                    onOpenChange={(v) => !v && setListKey(null)}
+                    title={listConfig.title}
+                    subtitle={listConfig.subtitle}
+                    items={listConfig.items}
+                    variant={listConfig.variant}
+                    emptyText={listConfig.emptyText}
+                    onOpenLead={(id) => setActiveLeadId(id)}
+                />
+            )}
         </div>
     );
 }

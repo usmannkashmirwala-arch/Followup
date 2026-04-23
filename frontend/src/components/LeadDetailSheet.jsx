@@ -22,6 +22,7 @@ export default function LeadDetailSheet({ leadId, open, onOpenChange, onChanged 
     const [newAction, setNewAction] = useState("");
     const [newDays, setNewDays] = useState(1);
     const [newChannel, setNewChannel] = useState("");
+    const [confirmDelete, setConfirmDelete] = useState(false);
 
     const load = async () => {
         if (!leadId) return;
@@ -36,7 +37,10 @@ export default function LeadDetailSheet({ leadId, open, onOpenChange, onChanged 
 
     useEffect(() => {
         if (open && leadId) load();
-        if (!open) setData(null);
+        if (!open) {
+            setData(null);
+            setConfirmDelete(false);
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, leadId]);
 
@@ -84,11 +88,16 @@ export default function LeadDetailSheet({ leadId, open, onOpenChange, onChanged 
     };
 
     const deleteLead = async () => {
-        if (!window.confirm("Delete this lead and all its history?")) return;
-        await api.delete(`/leads/${leadId}`);
-        onOpenChange(false);
-        onChanged?.();
-        toast("Lead deleted");
+        try {
+            await api.delete(`/leads/${leadId}`);
+            setConfirmDelete(false);
+            onOpenChange(false);
+            onChanged?.();
+            toast("Lead deleted");
+        } catch (e) {
+            console.error(e);
+            toast.error("Failed to delete lead");
+        }
     };
 
     const lead = data?.lead;
@@ -352,14 +361,33 @@ export default function LeadDetailSheet({ leadId, open, onOpenChange, onChanged 
                                 </div>
                             </section>
 
-                            <div className="pt-4 border-t border-black/10 flex justify-end">
-                                <button
-                                    onClick={deleteLead}
-                                    data-testid="delete-lead-btn"
-                                    className="mono text-[10px] uppercase tracking-[0.2em] text-[#FF3B30] hover:underline flex items-center gap-1"
-                                >
-                                    <Trash2 className="h-3 w-3" /> Delete lead
-                                </button>
+                            <div className="pt-4 border-t border-black/10 flex justify-end gap-2">
+                                {confirmDelete ? (
+                                    <>
+                                        <button
+                                            onClick={() => setConfirmDelete(false)}
+                                            data-testid="delete-lead-cancel"
+                                            className="mono text-[10px] uppercase tracking-[0.2em] px-3 py-1.5 border border-black/20 hover:border-black"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={deleteLead}
+                                            data-testid="delete-lead-confirm"
+                                            className="mono text-[10px] uppercase tracking-[0.2em] px-3 py-1.5 bg-[#FF3B30] text-white hover:bg-[#D32F2F] flex items-center gap-1"
+                                        >
+                                            <Trash2 className="h-3 w-3" /> Confirm delete
+                                        </button>
+                                    </>
+                                ) : (
+                                    <button
+                                        onClick={() => setConfirmDelete(true)}
+                                        data-testid="delete-lead-btn"
+                                        className="mono text-[10px] uppercase tracking-[0.2em] px-3 py-1.5 border border-[#FF3B30]/40 text-[#FF3B30] hover:bg-[#FF3B30] hover:text-white transition-colors flex items-center gap-1"
+                                    >
+                                        <Trash2 className="h-3 w-3" /> Delete lead
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </>

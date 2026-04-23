@@ -1,14 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { ArrowUp, Sparkles, Loader2 } from "lucide-react";
 
-const EXAMPLES = [
-    "Priya from Nova Labs replied on WhatsApp — send proposal Friday",
-    "Called Mark @ Acme, left voicemail. Try again Monday",
-    "I need to message Sam about the AI audit pitch",
-    "Alex signed! Closed won",
-];
-
-export default function ChatInput({ onSubmit }) {
+export default function ChatInput({ onSubmit, suggestions = [] }) {
     const [text, setText] = useState("");
     const [busy, setBusy] = useState(false);
     const inputRef = useRef(null);
@@ -45,19 +38,27 @@ export default function ChatInput({ onSubmit }) {
             data-testid="chat-input-wrapper"
         >
             <div className="max-w-3xl mx-auto px-4 pb-6 pointer-events-auto">
-                <div className="mb-2 flex flex-wrap gap-1.5">
-                    {EXAMPLES.map((ex) => (
-                        <button
-                            key={ex}
-                            type="button"
-                            onClick={() => setText(ex)}
-                            data-testid="chat-example-btn"
-                            className="mono text-[10px] uppercase tracking-[0.15em] bg-white border border-black/15 hover:border-black px-2.5 py-1.5 transition-colors"
-                        >
-                            {ex.length > 38 ? ex.slice(0, 38) + "…" : ex}
-                        </button>
-                    ))}
-                </div>
+                {suggestions.length > 0 && (
+                    <div
+                        className="mb-2 flex flex-wrap gap-1.5"
+                        data-testid="chat-suggestions"
+                    >
+                        {suggestions.map((ex, i) => (
+                            <button
+                                key={`${ex}-${i}`}
+                                type="button"
+                                onClick={() => {
+                                    setText(ex);
+                                    inputRef.current?.focus();
+                                }}
+                                data-testid="chat-example-btn"
+                                className="mono text-[10px] uppercase tracking-[0.15em] bg-white border border-black/15 hover:border-black px-2.5 py-1.5 transition-colors"
+                            >
+                                {ex.length > 42 ? ex.slice(0, 42) + "…" : ex}
+                            </button>
+                        ))}
+                    </div>
+                )}
                 <form
                     onSubmit={submit}
                     className="relative bg-white border border-black/20 shadow-[0_12px_40px_rgba(0,0,0,0.12)] flex items-center gap-2 p-2"
