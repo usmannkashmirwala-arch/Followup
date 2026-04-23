@@ -1,0 +1,138 @@
+{
+  "theme": "Light",
+  "archetype": "Archetype 4: Swiss & High-Contrast",
+  "typography": {
+    "fonts": {
+      "heading": "Cabinet Grotesk",
+      "body": "IBM Plex Sans",
+      "mono": "JetBrains Mono"
+    },
+    "scale": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl tracking-tighter leading-none font-black",
+      "h2": "text-2xl sm:text-3xl lg:text-4xl tracking-tight leading-tight font-bold",
+      "h3": "text-xl sm:text-2xl tracking-tight font-semibold",
+      "h4": "text-lg sm:text-xl tracking-tight font-medium",
+      "body": "text-base leading-relaxed font-normal",
+      "small": "text-sm leading-snug",
+      "overline": "text-xs uppercase tracking-[0.2em] font-semibold text-muted-foreground"
+    },
+    "rules": [
+      "No Inter, Roboto, or standard sans-serifs for headings.",
+      "Headlines must use tracking-tight or tracking-tighter.",
+      "Variable weights applied for typographic tension (e.g., extremely light vs. black)."
+    ]
+  },
+  "colors": {
+    "background": {
+      "default": "#FFFFFF",
+      "subtle": "#F9FAFB",
+      "muted": "#F3F4F6",
+      "surface": "#FFFFFF"
+    },
+    "foreground": {
+      "default": "#0A0A0A",
+      "muted": "#6B7280",
+      "inverse": "#FFFFFF"
+    },
+    "brand": {
+      "primary": "#000000",
+      "primary_foreground": "#FFFFFF",
+      "accent": "#002FA7",
+      "accent_foreground": "#FFFFFF",
+      "nagging_alert": "#FF3B30",
+      "nagging_alert_foreground": "#FFFFFF",
+      "success": "#000000"
+    },
+    "border": {
+      "default": "rgba(0, 0, 0, 0.1)",
+      "strong": "rgba(0, 0, 0, 0.9)"
+    },
+    "rules": [
+      "95% of UI is monochrome. Color is purely functional.",
+      "Signal Red (#FF3B30) used EXCLUSIVELY for overdue reminders and 'nagging' states.",
+      "International Klein Blue (#002FA7) used for AI interaction states and active pipeline links."
+    ]
+  },
+  "layout_and_spacing": {
+    "philosophy": "Control Room Grid",
+    "grids": {
+      "dashboard": "grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 or gap-6",
+      "kanban": "flex flex-row overflow-x-auto gap-4 pb-4 snap-x",
+      "bento_metrics": "grid-cols-2 md:grid-cols-4 gap-4"
+    },
+    "spacing_scale": [
+      "p-4", "p-6", "p-8", "p-12", "p-16"
+    ],
+    "rules": [
+      "Expose the skeleton: Use visible 1px borders between dashboard grid items (border-collapse look).",
+      "Padding inside bordered containers must be generous (p-6 or p-8) to prevent collision.",
+      "Optical alignment: Use tight padding on text-only elements, adjust icon paddings visually."
+    ]
+  },
+  "surface_strategies": {
+    "cards": "Flat solid background, 1px solid border (border-black/10), NO shadow. Hover state: border darkens to border-black/40.",
+    "modals_sidebars": "Glassmorphism: bg-white/70 backdrop-blur-2xl with 1px inner border-white/40.",
+    "chat_input": "Floating sticky bottom or fixed sidebar, crisp 1px border, stark white background, inner shadow for depth.",
+    "buttons": "Brutalist block: Pure black or solid red, sharp corners (rounded-none or max rounded-sm), heavy text contrast."
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-primary text-primary-foreground rounded-md px-6 py-3 font-medium hover:bg-black/80 transition-colors",
+      "alert": "bg-[#FF3B30] text-white rounded-md px-6 py-3 font-semibold shadow-sm hover:bg-[#D32F2F] transition-colors",
+      "ghost": "hover:bg-black/5 hover:text-black transition-colors"
+    },
+    "kanban_board": {
+      "column": "w-80 flex-shrink-0 flex flex-col gap-3 snap-start",
+      "card": "border border-border/40 bg-white p-4 cursor-pointer hover:border-black/40 transition-colors flex flex-col gap-2",
+      "labels": "Mono-weight uppercase tags for fast scanning"
+    },
+    "ai_chat_input": {
+      "container": "sticky bottom-6 mx-auto w-full max-w-3xl bg-white border border-black/10 shadow-[0_8px_30px_rgba(0,0,0,0.08)] p-2 rounded-xl flex items-center gap-2",
+      "input": "border-none focus-visible:ring-0 shadow-none text-base",
+      "submit_button": "bg-black text-white rounded-lg p-3 hover:scale-105 transition-transform"
+    },
+    "timeline": {
+      "container": "relative border-l border-black/10 ml-3 py-2",
+      "node": "absolute -left-1.5 w-3 h-3 bg-white border-2 border-black rounded-full"
+    },
+    "rules": [
+      "Use Shadcn UI primarily, but strip rounded borders down to rounded-sm or rounded-none for the Swiss Brutalist feel.",
+      "Avoid traditional Shadcn soft shadows.",
+      "Tables: Clean, border-b only, hover state bg-black/5."
+    ]
+  },
+  "motion_and_interactions": {
+    "hover": "Explicit hover text color declarations (hover:text-black).",
+    "focus": "High contrast focus rings: focus:ring-2 focus:ring-black focus:ring-offset-2.",
+    "kanban_drag": "Scale card slightly (scale-105) and apply drop-shadow-xl while dragging.",
+    "ai_processing": "Instead of a generic spinner, use a tracing beam or text shimmer effect (International Klein Blue) on the input border."
+  },
+  "accessibility": {
+    "contrast": "Ensure all text meets APCA minimums. Signal Red text on White bg is valid. Grey text must be at least text-muted-foreground.",
+    "testing": "All interactive elements must include data-testid attributes (e.g., data-testid='chat-submit-btn').",
+    "motion": "Respect prefers-reduced-motion for the AI processing animations."
+  },
+  "icons_and_media": {
+    "icon_library": "lucide-react",
+    "icon_style": "Use sharp, linear icons with 1.5px to 2px stroke width.",
+    "image_urls": {
+      "logo_placeholder": {
+        "url": "https://images.unsplash.com/photo-1769985840523-67f3603815e0?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzV8MHwxfHNlYXJjaHwxfHxjb21wYW55JTIwbG9nbyUyMHRyYW5zcGFyZW50JTIwYmFja2dyb3VuZHxlbnwwfHx8fDE3NzY5Nzk3MTl8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Abstract glass reflection suitable for a placeholder logo mark."
+      }
+    },
+    "rules": [
+      "Rely primarily on typography and data visualization rather than photos.",
+      "User avatars can default to stylized initials with pure black background and white text."
+    ]
+  },
+  "instructions_to_main_agent": [
+    "1. Ensure 'Cabinet Grotesk' is loaded for headers and 'IBM Plex Sans' for body text via Google Fonts or standard imports.",
+    "2. Implement the AI Chat input as the primary interface for data entry, fixed at the bottom or taking a prominent top widget slot.",
+    "3. Use the 'nagging_alert' (#FF3B30) color prominently for the 'Overdue follow-ups dashboard'. It should scream for attention against the monochrome background.",
+    "4. Overwrite Shadcn default Card and Button components to remove large border radii (use max 4px / rounded-sm) and soft shadows.",
+    "5. Ensure the Kanban board has 'overflow-x-auto' with snap scrolling for a smooth pipeline view.",
+    "6. Build a persistent right-side panel or dense dialog for the 'Lead Detail View', showing the activity timeline.",
+    "7. Do NOT generate new images, rely on the strict Swiss monochrome visual language."
+  ]
+}
