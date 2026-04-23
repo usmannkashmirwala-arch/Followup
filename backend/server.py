@@ -12,14 +12,14 @@ from typing import List, Optional, Literal
 import uuid
 from datetime import datetime, timezone, timedelta
 
-from emergentintegrations.llm.chat import LlmChat, UserMessage
+from anthropic import AsyncAnthropic
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")
 
 MONGO_URL = os.environ["MONGO_URL"]
 DB_NAME = os.environ["DB_NAME"]
-EMERGENT_LLM_KEY = os.environ.get("EMERGENT_LLM_KEY", "")
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 
 client = AsyncIOMotorClient(MONGO_URL)
 db = client[DB_NAME]
@@ -165,17 +165,16 @@ Rules:
 
 
 async def parse_update(text: str) -> dict:
-    if not EMERGENT_LLM_KEY:
-        raise HTTPException(500, "EMERGENT_LLM_KEY not configured")
-    session_id = f"crm-parse-{uuid.uuid4()}"
-    chat = LlmChat(
-        api_key=EMERGENT_LLM_KEY,
-        session_id=session_id,
-        system_message=PARSER_SYSTEM,
-    ).with_model("anthropic", "claude-sonnet-4-5-20250929")
-    resp = await chat.send_message(UserMessage(text=text))
-    raw = resp.strip()
-    # strip markdown fences if present
+    if not ANTHROPIC_API_KEY:
+        raise HTTPException(500, "ANTHROPIC_API_KEY not configured")
+    client_ai = AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
+    message = await client_ai.messages.create(
+        model="claude-haiku-4-5-20251001",
+        max_tokens=1024,
+        system=PARSER_SYSTEM,
+        messages=[{"role": "user", "content": text}],
+    )
+    raw = message.content[0].text.strip()
     if raw.startswith("```"):
         raw = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw, flags=re.MULTILINE).strip()
     try:
@@ -183,7 +182,6 @@ async def parse_update(text: str) -> dict:
     except Exception as e:
         logger.error(f"parse failure: {raw!r}")
         raise HTTPException(502, f"AI parse failed: {e}")
-    # validate stage/channel
     if data.get("stage") and data["stage"] not in STAGES:
         data["stage"] = None
     if data.get("channel") and data["channel"] not in CHANNELS:
